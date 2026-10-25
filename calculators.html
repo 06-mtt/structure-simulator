@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>結構小計算器 — 建築結構考試練習</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body { display: block; overflow: auto; }
+  .calc-nav { display: flex; gap: 6px; padding: 6px 12px; background: #1f2937; align-items: center; flex-wrap: wrap; }
+  .calc-nav h1 { color: #fff; font-size: 15px; margin: 0 12px 0 0; }
+  .calc-nav button { background: #374151; color: #fff; border: 1px solid #4b5563; border-radius: 4px; padding: 4px 10px; cursor: pointer; }
+  .calc-nav button.active { background: #2563eb; }
+  .calc-nav a { color: #d1d5db; margin-left: auto; font-size: 12px; }
+  .calc { display: none; padding: 12px 16px; gap: 16px; }
+  .calc.active { display: flex; flex-wrap: wrap; align-items: flex-start; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; min-width: 300px; flex: 1 1 320px; }
+  .card h2 { font-size: 15px; margin: 0 0 8px; }
+  .card canvas { width: 100%; height: 300px; display: block; background: #fafafa; border: 1px solid #eee; border-radius: 4px; }
+  .steps div { padding: 3px 0; border-bottom: 1px dashed #eee; font-size: 12.5px; }
+  .steps .big { font-size: 14px; font-weight: 600; color: #1e40af; }
+  .field input, .field select { width: 120px; }
+  .seg-table input { width: 70px; }
+  .note { background: #fef9c3; border-radius: 4px; padding: 6px 8px; font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="calc-nav">
+  <h1>結構小計算器</h1>
+  <button data-calc="section" class="active">斷面性質與應力</button>
+  <button data-calc="axial">分段軸力桿</button>
+  <button data-calc="stiff">柱側向勁度與週期</button>
+  <button data-calc="buck">柱挫屈</button>
+  <a href="index.html">← 回結構模擬器</a>
+</div>
+
+<!-- 斷面性質 -->
+<div class="calc active" id="calc-section">
+  <div class="card">
+    <h2>斷面形狀</h2>
+    <label class="field"><span>形狀</span><select id="sec-shape">
+      <option value="rect">矩形</option><option value="hollowRect">空心矩形</option><option value="I">I 型（對稱）</option><option value="T">T 型</option>
+      <option value="circle">圓形</option><option value="pipe">圓管</option><option value="custom">自訂矩形組合</option></select></label>
+    <div id="sec-params"></div>
+    <div class="sub">作用力（可空白）</div>
+    <label class="field"><span>彎矩 M（下側受拉為正）</span><input type="number" id="sec-M" value="100" step="any"></label>
+    <label class="field"><span>剪力 V</span><input type="number" id="sec-V" value="50" step="any"></label>
+    <p class="muted">單位自訂且需一致（例如長度 cm、力 kN → 應力 kN/cm²）。</p>
+  </div>
+  <div class="card"><h2>斷面圖與應力分布</h2><canvas id="sec-canvas"></canvas></div>
+  <div class="card"><h2>計算過程</h2><div class="steps" id="sec-steps"></div>
+    <div class="note">速記：I ∝ h³、S ∝ h²（矩形）；材料離中性軸愈遠愈有效率（I 型 ≫ 矩形同面積）；最大彎曲應力在離形心最遠的纖維，最大剪應力在中性軸。</div></div>
+</div>
+
+<!-- 分段軸力 -->
+<div class="calc" id="calc-axial">
+  <div class="card">
+    <h2>桿件分段與載重</h2>
+    <label class="field"><span>分段數</span><select id="ax-n"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label>
+    <label class="field check"><input type="checkbox" id="ax-right"><span>右端也固定（靜不定，需相容條件）</span></label>
+    <table class="tbl small seg-table" id="ax-table"></table>
+    <p class="muted">節點 0 為左端固定支承；P 向右為正。E、A 單位自訂（例如 kN/cm²、cm²，L 用 cm）。</p>
+  </div>
+  <div class="card"><h2>軸力圖與位移</h2><canvas id="ax-canvas"></canvas></div>
+  <div class="card"><h2>計算過程</h2><div class="steps" id="ax-steps"></div>
+    <div class="note">δ = Σ N_i L_i /(E_i A_i)；勁度 k = EA/L。不同材料受同力：變形與 E 成反比；兩端固定時反力依「相容條件 Σδ = 0」分配。</div></div>
+</div>
+
+<!-- 柱側向勁度與週期 -->
+<div class="calc" id="calc-stiff">
+  <div class="card">
+    <h2>樓層柱列</h2>
+    <label class="field"><span>柱數</span><select id="st-n"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+    <table class="tbl small seg-table" id="st-table"></table>
+    <label class="field"><span>樓層剪力 V</span><input type="number" id="st-V" value="100" step="any"></label>
+    <label class="field"><span>樓層質量 m（t = kN·s²/m）</span><input type="number" id="st-m" value="200" step="any"></label>
+    <label class="field"><span>或重量 W（kN，填入則 m = W/9.81）</span><input type="number" id="st-W" value="" step="any"></label>
+    <div class="sub">規範經驗週期（速記）</div>
+    <label class="field"><span>建築高度 H (m)</span><input type="number" id="st-H" value="30" step="any"></label>
+  </div>
+  <div class="card"><h2>勁度分配</h2><canvas id="st-canvas"></canvas></div>
+  <div class="card"><h2>計算過程</h2><div class="steps" id="st-steps"></div>
+    <div class="note">兩端固定（不轉動）k = 12EI/h³；一端鉸接 k = 3EI/h³。同層柱頂位移相同 → 剪力依勁度比例分配；柱愈短愈剛（1/h³）→ 短柱吸收大部分剪力（短柱效應）。T = 2π√(m/K)：質量愈大、勁度愈小 → 週期愈長。</div></div>
+</div>
+
+<!-- 柱挫屈 -->
+<div class="calc" id="calc-buck">
+  <div class="card">
+    <h2>柱參數</h2>
+    <label class="field"><span>E</span><input type="number" id="bk-E" value="20000" step="any"></label>
+    <label class="field"><span>I</span><input type="number" id="bk-I" value="5000" step="any"></label>
+    <label class="field"><span>A</span><input type="number" id="bk-A" value="50" step="any"></label>
+    <label class="field"><span>柱長 L</span><input type="number" id="bk-L" value="400" step="any"></label>
+    <label class="field"><span>降伏應力 σy（可空白）</span><input type="number" id="bk-sy" value="25" step="any"></label>
+    <label class="field"><span>端部條件</span><select id="bk-end"></select></label>
+    <p class="muted">單位一致（例如 kN/cm²、cm⁴、cm²、cm）。</p>
+  </div>
+  <div class="card"><h2>挫屈形狀與有效長度</h2><canvas id="bk-canvas"></canvas></div>
+  <div class="card"><h2>計算過程與端部條件比較</h2><div class="steps" id="bk-steps"></div>
+    <div class="note">Pcr = π²EI/(KL)²；Pcr ∝ 1/L²、∝ I（取弱軸 I_min）。K：兩端固定 0.5、固定–鉸 0.7、兩端鉸 1.0、固定–導向 1.0、懸臂 2.0 → Pcr 比例 4 : 2 : 1 : 1 : 0.25。長細比 λ = KL/r；σcr > σy 時非彈性挫屈，尤拉公式不適用。</div></div>
+</div>
+
+<script src="js/calc-core.js"></script>
+<script src="js/calc.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>結構模擬器 — 建築結構考試練習</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>結構模擬器</h1>
+  <div id="toolbar"></div>
+</header>
+<main>
+  <div id="left">
+    <div id="structure-wrap"><canvas id="structure"></canvas></div>
+    <div id="status"><span id="status-det" class="badge none">—</span><span id="status-title" class="status-title"></span><span id="status-hint"></span>
+      <label class="status-ctl"><input type="checkbox" id="chk-deformed"> 疊加變形</label>
+      <input type="range" id="rng-deform" min="0.2" max="5" step="0.2" value="1" title="變形放大倍率">
+      <span id="status-pos"></span></div>
+    <div id="diagrams"></div>
+  </div>
+  <aside id="side"></aside>
+</main>
+<div id="dlg-arch" class="modal hidden">
+  <div class="modal-box">
+    <h3>產生拱／纜索／山形剛架</h3>
+    <label class="field"><span>類型</span><select id="ar-kind">
+      <option value="arch3">三鉸拱</option><option value="arch2">兩鉸拱（靜不定）</option><option value="archFixed">固定拱（靜不定）</option>
+      <option value="cable">纜索</option><option value="gable3">山形三鉸剛架</option></select></label>
+    <label class="field" id="ar-shape-row"><span>形狀</span><select id="ar-shape"><option value="parabola">拋物線</option><option value="circle">圓弧</option><option value="triangle">折線（三角）</option></select></label>
+    <label class="field"><span>跨度 L</span><input type="number" id="ar-span" value="12" step="any"></label>
+    <label class="field"><span>矢高／垂度 f</span><input type="number" id="ar-rise" value="3" step="any"></label>
+    <label class="field hidden" id="ar-height-row"><span>柱高 h</span><input type="number" id="ar-height" value="4" step="any"></label>
+    <label class="field" id="ar-n-row"><span>分段數（偶數）</span><input type="number" id="ar-n" value="12" step="2" min="2"></label>
+    <label class="field"><span>均布 w（每單位水平長度）</span><input type="number" id="ar-w" value="5" step="any"></label>
+    <label class="field"><span>頂點集中力 P</span><input type="number" id="ar-P" value="0" step="any"></label>
+    <label class="field" id="ar-mode-row"><span>均布施加方式</span><select id="ar-mode"><option value="projected">桿件分布載重（投影）</option><option value="nodal">節點集中力</option></select></label>
+    <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn" id="ar-cancel">取消</button><button class="btn primary" id="ar-ok">產生</button></div>
+  </div>
+</div>
+<script src="js/linalg.js"></script>
+<script src="js/model.js"></script>
+<script src="js/solver.js"></script>
+<script src="js/analysis.js"></script>
+<script src="js/draw.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/diagrams.js"></script>
+<script src="js/panels.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
